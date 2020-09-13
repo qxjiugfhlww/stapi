@@ -263,7 +263,9 @@ if __name__ == "__main__":
 
         mask = cv2.inRange(hsv, lower_red, upper_red)
         res = cv2.bitwise_and(image,image, mask= mask)
-
+        
+        '''
+        # Not optimized
         x_arr = []
         for i in range(len(res)):
             x_arr.append([])
@@ -293,7 +295,7 @@ if __name__ == "__main__":
         for i in range(len(y_arr)):
             image[i, 50] = [0,255,0]
 
-        
+        '''
 
         #print(x_arr)
 
