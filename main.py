@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     
 
-        image = cv2.imread("laser-5.jpg", -1)
+        image = cv2.imread("frame147.jpg", -1)
         print(image)
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         image[50:60,50:60] = [10,150,10]

@@ -31,7 +31,13 @@ def skeleton_endpoints(skel):
 
 
 
-image = cv2.imread("laser-5.jpg", -1)
+image = cv2.imread("frame917.jpg", -1)
+
+def on_click(event, x, y, p1, p2):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print(x,y,p1,p2)
+cv2.namedWindow('image')
+cv2.setMouseCallback('image', on_click)
 
 #image = cv2.resize(image, (1200, 900))
 hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
@@ -41,14 +47,19 @@ lower_red = np.array([0,50,50])
 upper_red = np.array([40,255,255])
 
 #upper red
-lower_red2 = np.array([140,170,180])
-upper_red2 = np.array([190,240,290])
+lower_red2 = np.array([-1,129,215])
+upper_red2 = np.array([32,187,295])
 mask = cv2.inRange(hsv, lower_red2, upper_red2)
 
 res = cv2.bitwise_and(image,image, mask= mask)
 
+
+
+
 kernel = np.ones((5,5),np.uint8)
-res = cv2.dilate(res,kernel,iterations = 3)
+res = cv2.dilate(res,kernel,iterations = 2)
+
+
 
 
 res_blur = cv2.GaussianBlur(res, (11,1), 1)
@@ -58,6 +69,37 @@ cv2.imshow('image', image)
 cv2.imshow('res', res)
 # perform skeletonization
 skeleton = skeletonize(res)
+
+### Finding endpoints of skeleton
+# Find row and column locations that are non-zero
+cv2.imshow('skeleton', skeleton)
+(rows,cols, chan) = np.nonzero(skeleton)
+# Initialize empty list of co-ordinates
+skel_coords = []
+
+# For each non-zero pixel...
+for (r,c) in zip(rows,cols):
+
+    # Extract an 8-connected neighbourhood
+    (col_neigh,row_neigh) = np.meshgrid(np.array([c-1,c,c+1]), np.array([r-1,r,r+1]))
+    
+
+    # Cast to int to index into image
+    col_neigh = col_neigh.astype('int')
+    row_neigh = row_neigh.astype('int')
+
+    # Convert into a single 1D array and check for non-zero locations
+    pix_neighbourhood = skeleton[row_neigh,col_neigh].ravel() != 0
+
+    # If the number of non-zero locations equals 2, add this to 
+    # our list of co-ordinates
+    if np.sum(pix_neighbourhood) == 2:
+        skel_coords.append((r,c))
+print("".join(["(" + str(r) + "," + str(c) + ")\n" for (r,c) in skel_coords]))
+
+for (r,c) in skel_coords:
+    image = cv2.circle(image, (c,r), 1, (0, 255, 0), 5)
+
 
 indices = np.where(skeleton==255)
 skeleton[indices[0], indices[1], :] = [255, 255, 0]
