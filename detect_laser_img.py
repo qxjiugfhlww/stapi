@@ -70,6 +70,26 @@ cv2.imshow('res', res)
 # perform skeletonization
 skeleton = skeletonize(res)
 
+
+# Load image, convert to grayscale, threshold and find contours
+gray = cv2.cvtColor(skeleton,cv2.COLOR_BGR2GRAY)
+ret, thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY)
+contours,hier = cv2.findContours(thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+cnt = contours[0]
+
+# then apply fitline() function
+[vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+
+# Now find two extreme points on the line to draw line
+lefty = int((-x*vy/vx) + y)
+righty = int(((gray.shape[1]-x)*vy/vx)+y)
+
+#Finally draw the line
+cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),255,2)
+cv2.imshow('img_line',image)
+
+
+
 ### Finding endpoints of skeleton
 # Find row and column locations that are non-zero
 cv2.imshow('skeleton', skeleton)
