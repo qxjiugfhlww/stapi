@@ -21,7 +21,7 @@ def main():
     import sys
     global image_hsv, pixel # so we can use it in mouse callback
 
-    image_src = cv2.imread("frame917.jpg")
+    image_src = cv2.imread("blue.png")
 
     if image_src is None:
         print ("the image read is None............")

@@ -29,9 +29,28 @@ def skeleton_endpoints(skel):
     out[np.where(filtered==11)] = 1
     return out
 
+image = cv2.imread("curve.jpg", -1)
+'''
+# Detecting curve line (not working yet)
+
+inputImageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(inputImageGray,150,200,apertureSize = 3)
+minLineLength = 50
+maxLineGap = 3
+lines = cv2.HoughLinesP(edges,cv2.HOUGH_PROBABILISTIC, np.pi/180, 30, minLineLength,maxLineGap)
+for x in range(0, len(lines)):
+    for x1,y1,x2,y2 in lines[x]:
+        #cv2.line(inputImage,(x1,y1),(x2,y2),(0,128,0),2, cv2.LINE_AA)
+        pts = np.array([[x1, y1 ], [x2 , y2]], np.int32)
+        cv2.polylines(image, [pts], True, (0,255,0))
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+cv2.putText(image,"Tracks Detected", (500, 250), font, 0.5, 255)
+cv2.imshow("Trolley_Problem_Result", image)
+cv2.imshow('edge', edges)
+'''
 
 
-image = cv2.imread("frame917.jpg", -1)
 
 def on_click(event, x, y, p1, p2):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -52,10 +71,6 @@ upper_red2 = np.array([32,187,295])
 mask = cv2.inRange(hsv, lower_red2, upper_red2)
 
 res = cv2.bitwise_and(image,image, mask= mask)
-
-
-
-
 kernel = np.ones((5,5),np.uint8)
 res = cv2.dilate(res,kernel,iterations = 2)
 
@@ -65,7 +80,7 @@ res = cv2.dilate(res,kernel,iterations = 2)
 res_blur = cv2.GaussianBlur(res, (11,1), 1)
 
 cv2.imshow('res_blur', res_blur)
-cv2.imshow('image', image)       
+      
 cv2.imshow('res', res)
 # perform skeletonization
 skeleton = skeletonize(res)
@@ -84,10 +99,47 @@ cnt = contours[0]
 lefty = int((-x*vy/vx) + y)
 righty = int(((gray.shape[1]-x)*vy/vx)+y)
 
+print("lefty", lefty)
+print("righty", righty)
+
 #Finally draw the line
-cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),255,2)
+cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),255,1)
+print("lol", (gray.shape[1]-1,righty),(0,lefty))
 cv2.imshow('img_line',image)
 
+
+#image = cv2.resize(image, (1200, 900))
+hsv_blue = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+
+#lower red [120 255 255] [110 245 215] [130 265 295]
+lower_blue = np.array([110, 245, 215])
+upper_blue = np.array([130, 265, 295])
+
+mask_blue = cv2.inRange(hsv_blue, lower_blue, upper_blue)
+
+#cv2.fillPoly(mask_blue, [np.array([ [gray.shape[1], 0], [gray.shape[1]-1,righty],[0,lefty], [0, gray.shape[0]], [0,0]])], (255, 255, 255))
+
+
+
+
+
+
+res_blue = cv2.bitwise_and(image,image, mask= mask_blue)
+kernel = np.ones((5,5),np.uint8)
+# print(res_blue[760,237])
+# for i in range(gray.shape[0]-1):
+#     for j in range(gray.shape[1]-2):
+#         if (np.all(res_blue[i,j+1] == [255,0,0])):
+#             continue
+#         else:
+#             res_blue[i,j] = (255,255,255)
+cv2.imshow('res_blue',res_blue)
+
+cv2.imshow('mask_blue',mask_blue)
+
+mask_blue_inv = cv2.bitwise_not(mask_blue)
+
+cv2.imshow('mask_blue_inv', mask_blue_inv)
 
 
 ### Finding endpoints of skeleton
@@ -148,7 +200,6 @@ cv2.imshow('image2', out_img)
 rows,cols,channels = image.shape
 print(rows,cols,channels)
 roi = image[0:rows, 0:cols ]
-print(roi)
 
 
 
@@ -159,9 +210,59 @@ mask_inv = cv2.bitwise_not(img2gray)
 
 cv2.imshow('mask_inv', mask_inv)
 
+added_image = cv2.addWeighted(mask_inv,0.9,mask_blue_inv,0.1,9)
 
+
+
+
+
+cv2.line(mask_inv,(gray.shape[1]-1,righty),(0,lefty),0,1)
+cv2.imshow('mask_with_line', mask_inv)
+
+cv2.imshow('added_image', added_image)
 img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
 cv2.imshow('img1_bg', img1_bg)
+
+
+#convert img to grey
+#set a thresh
+thresh = 100
+#get threshold image
+ret,thresh_img = cv2.threshold(added_image, thresh, 255, cv2.THRESH_BINARY)
+#find contours
+contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+#create an empty image for contours
+img_contours = np.zeros(image.shape)
+# draw the contours on the empty image
+cv2.drawContours(img_contours, contours, -1, (0,255,0), 3)
+#save image
+cv2.imshow('img_contours',img_contours) 
+
+
+#gray = cv2.cvtColor(mask5, cv2.COLOR_BGR2GRAY)
+# frame = cv2.imread("mask4.jpg")
+# static_back = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+# while(True):
+
+#     diff_frame = cv2.absdiff(static_back, gray)
+
+#     thresh_frame = cv2.threshold(diff_frame, 10, 255, cv2.THRESH_BINARY)[1])
+
+#     thresh_frame = cv2.dilate(thresh_frame, None, iterations = 1)
+
+#     (cnts, h) = cv2.findContours(thresh_frame.copy(), cv2.RETR_CCOMP, 
+#     cv2.CHAIN_APPROX_NONE)
+#     for contour in cnts:
+#         if cv2.contourArea(contour) > 10000:
+#             cv2.drawContours(frame, contour, -1, (0, 255, 0), 5)    
+#     result = imutils.resize(frame, width=320)
+#     cv2.imshow("Frame", result)
+#     cv2.imwrite("Frame.jpg", result)
+#     key = cv2.waitKey(1)
+#     if key == 27:
+#         break
 
 
     
