@@ -78,6 +78,35 @@ while(cap.isOpened()):
     # perform skeletonization
     skeleton = skeletonize(res)
 
+
+    (rows,cols, chan) = np.nonzero(skeleton)
+    # Initialize empty list of co-ordinates
+    skel_coords = []
+
+    # For each non-zero pixel...
+    for (r,c) in zip(rows,cols):
+
+        # Extract an 8-connected neighbourhood
+        (col_neigh,row_neigh) = np.meshgrid(np.array([c-1,c,c+1]), np.array([r-1,r,r+1]))
+        
+
+        # Cast to int to index into image
+        col_neigh = col_neigh.astype('int')
+        row_neigh = row_neigh.astype('int')
+
+        # Convert into a single 1D array and check for non-zero locations
+        pix_neighbourhood = skeleton[row_neigh,col_neigh].ravel() != 0
+
+        # If the number of non-zero locations equals 2, add this to 
+        # our list of co-ordinates
+        if np.sum(pix_neighbourhood) == 2:
+            skel_coords.append((r,c))
+    print("".join(["(" + str(r) + "," + str(c) + ")\n" for (r,c) in skel_coords]))
+
+    for (r,c) in skel_coords:
+        image = cv2.circle(image, (c,r), 1, (0, 255, 0), 5)
+
+
     indices = np.where(skeleton==255)
     skeleton[indices[0], indices[1], :] = [0, 255, 0]
     #cv2.imshow('skeleton', skeleton)
