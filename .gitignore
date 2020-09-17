@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 venv
+=======
+venv
+.venv
+.vscode
+>>>>>>> 0e2cb47063564f12dc1da95497536fb18722da29

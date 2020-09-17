@@ -29,7 +29,7 @@ def skeleton_endpoints(skel):
     out[np.where(filtered==11)] = 1
     return out
 
-image = cv2.imread("curve.jpg", -1)
+image = cv2.imread("curve_fliped_horizont.jpg", -1)
 '''
 # Detecting curve line (not working yet)
 
@@ -55,6 +55,7 @@ cv2.imshow('edge', edges)
 def on_click(event, x, y, p1, p2):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(x,y,p1,p2)
+cv2.imshow('image',image)
 cv2.namedWindow('image')
 cv2.setMouseCallback('image', on_click)
 
@@ -66,7 +67,7 @@ lower_red = np.array([0,50,50])
 upper_red = np.array([40,255,255])
 
 #upper red
-lower_red2 = np.array([-1,129,215])
+lower_red2 = np.array([-1,65,215])
 upper_red2 = np.array([32,187,295])
 mask = cv2.inRange(hsv, lower_red2, upper_red2)
 
@@ -81,7 +82,7 @@ res_blur = cv2.GaussianBlur(res, (11,1), 1)
 
 cv2.imshow('res_blur', res_blur)
       
-cv2.imshow('res', res)
+cv2.imshow('res1', res)
 # perform skeletonization
 skeleton = skeletonize(res)
 
@@ -103,7 +104,7 @@ print("lefty", lefty)
 print("righty", righty)
 
 #Finally draw the line
-cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),255,1)
+cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),(255,255,0),1)
 print("lol", (gray.shape[1]-1,righty),(0,lefty))
 cv2.imshow('img_line',image)
 
@@ -112,8 +113,9 @@ cv2.imshow('img_line',image)
 hsv_blue = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
 
 #lower red [120 255 255] [110 245 215] [130 265 295]
-lower_blue = np.array([110, 245, 215])
-upper_blue = np.array([130, 265, 295])
+# 255_255_0 [ 90 255 255] [ 80 245 215] [100 265 295]
+lower_blue = np.array([ 90, 255, 255])
+upper_blue = np.array([ 90, 255, 255])
 
 mask_blue = cv2.inRange(hsv_blue, lower_blue, upper_blue)
 
@@ -178,11 +180,13 @@ skeleton[indices[0], indices[1], :] = [255, 255, 0]
 cv2.imshow('skeleton', skeleton)
 
 skel_endp = skeleton_endpoints(skeleton)
+print("skel_coords", skel_coords)
+
 
 
 
 redImg = np.zeros(image.shape, image.dtype)
-redImg[:,:] = (0, 0, 255)
+redImg[:,:] = (0, 255, 255)
 redMask = cv2.bitwise_and(redImg, redImg, mask=mask)
 cv2.addWeighted(redMask, 1, image, 1, 0, image)
 
@@ -212,6 +216,197 @@ cv2.imshow('mask_inv', mask_inv)
 
 added_image = cv2.addWeighted(mask_inv,0.9,mask_blue_inv,0.1,9)
 
+cv2.imshow('added_image', added_image)
+
+# <1 Fill res_blue2 with 2 diff colors on the sides of skelet line
+
+color2_fill_skeleton = skeleton.copy()
+
+
+coord=cv2.findNonZero(img2gray)
+print(len(coord))
+print(skel_coords[1][0])
+print(coord[0][0][0])
+
+print(res_blue.shape)
+
+
+counter = 0
+for i in range(skel_coords[0][0], skel_coords[1][0]):
+    for j in range(0, coord[counter][0][0]):
+        #print(i, j, coord[i][0][0])
+        color2_fill_skeleton[i,j] = [0, 50, 255]
+    counter += 1
+
+counter = 0
+for i in range(skel_coords[0][0], skel_coords[1][0]):
+    for j in range(coord[counter][0][0], res_blue.shape[1]):
+        #print(i, j, coord[i][0][0])
+        color2_fill_skeleton[i,j] = [0, 10, 255]
+    counter += 1
+
+cv2.imshow('color2_fill_skeleton', color2_fill_skeleton)
+# 1>
+
+# <2 Fill res_blue2 with 2 diff colors on the sides of straight line
+color2_fill_straight = res_blue.copy()
+
+
+
+fit_straight = np.zeros(shape=[mask_blue.shape[0], mask_blue.shape[1], 1], dtype=np.uint8)
+# draw staright line
+cv2.line(fit_straight,(skel_coords[0][1],skel_coords[0][0]),(skel_coords[1][1],skel_coords[1][0]),255,1)
+coord=cv2.findNonZero(fit_straight)
+# for i in range(coord[0][0][1], skel_coords[0][0]): 
+#     print("coord[i][0][0]", coord[i][0][0])
+#     color2_fill_straight[i, coord[i][0][0]] = [0,255,0]
+
+print("len(coord)", len(coord))
+print("skel_coords", skel_coords)
+#print("coord", coord)
+
+counter = 0
+for i in range(skel_coords[0][0], skel_coords[1][0]):
+    #print(coord[counter][0][0])
+    for j in range(0, coord[counter][0][0]):
+        #print(i, j, coord[i][0][0])
+        color2_fill_straight[i,j] = [100, 150, 100]
+    counter += 1
+
+counter = 0
+for i in range(skel_coords[0][0], skel_coords[1][0]):
+    for j in range(coord[counter][0][0], res_blue.shape[1]):
+        #print(i, j, coord[i][0][0])
+        color2_fill_straight[i,j] = [100, 150, 150]
+    counter += 1
+
+cv2.imshow('color2_fill_straight', color2_fill_straight)
+# 2>
+
+
+
+# color2_fill_straight[color2_fill_straight[:, :, 1:].all(axis=-1)] = 0
+# color2_fill_skeleton[color2_fill_skeleton[:, :, 1:].all(axis=-1)] = 0
+
+# overlay_straight_skelet_filled = cv2.addWeighted(color2_fill_straight, 1, color2_fill_skeleton, 1, 0)
+
+# cv2.imshow('overlay_straight_skelet_filled', overlay_straight_skelet_filled)
+
+
+
+
+overlay_straight_skelet_filled = cv2.addWeighted(color2_fill_straight,0.5,color2_fill_skeleton,0.5,0)
+cv2.imshow('overlay_straight_skelet_filled', overlay_straight_skelet_filled)
+
+# [ 10 192 202] [  0 182 162] [ 20 202 242]
+# [  7 183 178] [ -3 173 138] [ 17 193 218]
+
+
+# define the list of boundaries
+boundaries = [
+	([ 7, 183, 178], [ 10, 192, 202])
+]
+
+
+# boundaries = [
+# 	([ 10, 192, 202], [ 10, 192, 202]),
+#     ([ 7, 183, 178], [ 7, 183, 178])
+# ]
+
+# hsv_blue = cv2.cvtColor(overlay_straight_skelet_filled,cv2.COLOR_BGR2HSV)
+
+# mask = cv2.inRange(hsv_blue, np.array([ 10, 192, 202]), np.array([ 10, 192, 202]))
+# output = cv2.bitwise_and(hsv_blue, overlay_straight_skelet_filled, mask = mask)
+# # show the images
+# cv2.imshow("test", np.hstack([overlay_straight_skelet_filled, output]))
+# cv2.imshow("test1", mask)
+# cv2.imshow("test2", output)
+# cv2.imshow("test3", overlay_straight_skelet_filled)
+
+counter = 0
+prev_output = None
+overlay_masks = None
+output_mask_rect = None
+for (lower, upper) in boundaries:
+    hsv_blue = cv2.cvtColor(overlay_straight_skelet_filled,cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv_blue, np.array(lower), np.array(upper))
+    output = cv2.bitwise_and(overlay_straight_skelet_filled, hsv_blue, mask = mask)
+    if (np.all(prev_output != None)):
+        overlay_masks = cv2.addWeighted(output,0.5,prev_output,0.5,0)
+    prev_output = output
+	
+
+    # remove unnecessary contours
+    ## draw staright line
+    cv2.line(output,(skel_coords[0][1],skel_coords[0][0]),(skel_coords[1][1],skel_coords[1][0]),(0,0,0),2)
+    cv2.line(mask,(skel_coords[0][1],skel_coords[0][0]),(skel_coords[1][1],skel_coords[1][0]),(0,0,0),2)
+    ## draw skelet line
+    output[indices[0], indices[1]] = [0,0,0]
+
+    # for i in range(len(mask)):
+    #     for j in range(len(mask[0])):
+    #         print(indices[0][i], indices[1][j])
+    #         mask[indices[0][i]][indices[1][j]] = [0,0,0]
+
+    # print(len(mask))
+
+    # for i in range(236, 579):
+    #     print(mask[i])
+
+    # mask[indices[0]][indices[1]] = 0
+
+    for i in range(len(indices[0])):
+        mask[indices[0][i]][indices[1][i]] = 0
+        mask[indices[0][i]+1][indices[1][i]] = 0
+        mask[indices[0][i]-1][indices[1][i]] = 0
+
+    cv2.imshow("test1"+str(counter), mask)
+    cv2.imshow("test2"+str(counter), output)
+
+
+    ret,thresh = cv2.threshold(mask, 40, 255, 0)
+    if (int(cv2.__version__[0]) > 3):
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    else:
+        im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    if len(contours) != 0:
+        # draw in blue the contours that were founded
+        #cv2.drawContours(output, contours, -1, 255, 3)
+
+        # find the biggest countour (c) by the area
+        c = max(contours, key = cv2.contourArea)
+        x,y,w,h = cv2.boundingRect(c)
+
+        # draw the biggest contour (c) in green
+        cv2.rectangle(output,(x,y),(x+w,y+h),(0,255,0),1)
+        output_mask_rect = output
+
+    # show the images
+    cv2.imshow("Result", output)
+
+    counter += 1
+counter = 0
+
+# cv2.imshow("overlay_masks", overlay_masks)
+
+
+
+
+
+
+img_bwa = cv2.bitwise_and(color2_fill_straight,color2_fill_skeleton)
+img_bwo = cv2.bitwise_or(color2_fill_straight,color2_fill_skeleton)
+img_bwx = cv2.bitwise_xor(color2_fill_straight,color2_fill_skeleton)
+cv2.imshow("Bitwise AND of Image 1 and 2", img_bwa)
+cv2.imshow("Bitwise OR of Image 1 and 2", img_bwo)
+cv2.imshow("Bitwise XOR of Image 1 and 2", img_bwx)
+
+
+
+
+added_image = cv2.addWeighted(mask_inv,0.9,mask_blue_inv,0.1,9)
+
 
 
 
@@ -222,22 +417,6 @@ cv2.imshow('mask_with_line', mask_inv)
 cv2.imshow('added_image', added_image)
 img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
 cv2.imshow('img1_bg', img1_bg)
-
-
-#convert img to grey
-#set a thresh
-thresh = 100
-#get threshold image
-ret,thresh_img = cv2.threshold(added_image, thresh, 255, cv2.THRESH_BINARY)
-#find contours
-contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-#create an empty image for contours
-img_contours = np.zeros(image.shape)
-# draw the contours on the empty image
-cv2.drawContours(img_contours, contours, -1, (0,255,0), 3)
-#save image
-cv2.imshow('img_contours',img_contours) 
 
 
 #gray = cv2.cvtColor(mask5, cv2.COLOR_BGR2GRAY)
@@ -275,6 +454,12 @@ cv2.imshow('img_contours',img_contours)
 
 img=cv2.addWeighted(image,0.5,skeleton,0.5,0)
 cv2.imshow('img', img)
+
+
+
+res = cv2.addWeighted(output_mask_rect,0.5,img,0.5,0)
+cv2.imshow('res', res)
+
 cv2.waitKey(0)
 
 cv2.destroyAllWindows()
