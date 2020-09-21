@@ -29,7 +29,7 @@ def skeleton_endpoints(skel):
     out[np.where(filtered==11)] = 1
     return out
 
-image = cv2.imread("curve_fliped_horizont.jpg", -1)
+image = cv2.imread("frame917.jpg", -1)
 '''
 # Detecting curve line (not working yet)
 
@@ -103,7 +103,7 @@ righty = int(((gray.shape[1]-x)*vy/vx)+y)
 print("lefty", lefty)
 print("righty", righty)
 
-#Finally draw the line
+    #Finally draw the line
 cv2.line(image,(gray.shape[1]-1,righty),(0,lefty),(255,255,0),1)
 print("lol", (gray.shape[1]-1,righty),(0,lefty))
 cv2.imshow('img_line',image)
