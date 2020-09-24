@@ -11,6 +11,10 @@ img = 255 * np.ones(shape=[480, 640, 3], dtype=np.uint8)
 img_copy_1 = img.copy()
 
 
+img_copy_2 = img.copy()
+
+img_copy_3 = img.copy()
+
 img = cv2.circle(img, (100, 100), 40, (150,200,50), 3)
 
 img = cv2.circle(img, (100, 100), 2, (110,220,50), 2)
@@ -246,8 +250,191 @@ angle_rb = findAngle(blue_point_2[0], blue_point_2[1], red_point[0], red_point[1
 print(angle_rb)
 
 
+encoder = -0.8
+
+angle_bc = None
+
+
+imageAngle4 = 40
+
+if (encoder == 0):
+    angle_bc = imageAngle4
+
+
+x1 = math.cos(90)*radius
+y1 = math.sin(90)*radius
+   
+x2 = math.cos(90+imageAngle4)
+y2 = math.cos(90+imageAngle4)
+
+print(x2, y2)
+
+
+import random
+import decimal
+
+
+
+n = 10
+k = 9
+
+
+
+
+N = 9
+r_arr = [[float(decimal.Decimal(random.randrange(2800, 3300))/100) for i in range(N)] for j in range(N) ]
+
+min_r_arr = []
+max_r_arr = []
+for j in range(N):
+    min_r_arr.append([(i, x) for i, x in enumerate(r_arr[j]) if x == min(r_arr[j])])
+    max_r_arr.append([(i, x) for i, x in enumerate(r_arr[j]) if x == max(r_arr[j])])
+
+tmp_r = []
+tmp_i = []
+
+for i, x in enumerate(min_r_arr):
+    tmp_r.append(x[0][1])
+    tmp_i.append(x[0][0])
+
+    print("x", i, x[0][0], x[0][1])
+    for j, y in enumerate(x):
+        print(min(x))
+        print("y", j, y)
+
+
+print("tmp_r", tmp_r)
+print("tmp_i", tmp_i)
+
+
+min_min = [(i,x) for i, x in enumerate(tmp_r) if x == min(tmp_r)]
+
+print("min:", min_min)
+
+
+
+
+
+#r_arr = [float(decimal.Decimal(random.randrange(2800, 3300))/100) for i in range(n)]
+
+#r_arr = [31.65, 32.98, 31.96, 31.45, 30.34, 31.38, 28.16, 32.8, 28.71, 28.32]
+
+start_x = 35
+center_xy = [[start_x+70*i,50] for i in range(10) ]
+
+
+#center_xy = [50,50]
+
+print("center_xy", center_xy)
+
+
+# Step #6
+
+points = []
+
+points_all = []
+
+for j in range(N):
+    cv2.circle(img_copy_2, (center_xy[j][0], center_xy[j][1]), 2, (255, 0, 0), -1)
+    points = []
+    for i in range(N):
+        theta = i*(360/N)
+        theta *= np.pi/180.0
+        points.append([int(center_xy[j][0]+np.cos(theta)*r_arr[j][i]),int(center_xy[j][1]-np.sin(theta)*r_arr[j][i])])
+        cv2.line(img_copy_2, (center_xy[j][0], center_xy[j][1]),(points[len(points)-1][0], points[len(points)-1][1]), 255, 1)
+        #(row,col) = np.nonzero(np.logical_and(img_copy_2, ))
+        #cv2.line(img_copy_2, (center_xy[j][0], center_xy[j][1]), (col[0],row[0]), 0, 1)
+    points_all.append(points)
+    cv2.drawContours(img_copy_3, [np.array(points)], contourIdx=-1, color=(0,0,0),thickness=-1)
+    center_xy
+
+cv2.circle(img_copy_2, (50, 50), 2, (255, 0, 0), -1)
+
+
+
+points = np.array([points], np.int32)
+
+#print("points", points)
+
+
+
+
+
+
+imgray = cv2.cvtColor(img_copy_3, cv2.COLOR_BGR2LAB)[...,0]
+
+ret, thresh = cv2.threshold(imgray, 20, 255, cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
+contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+print("len(contours)", len(contours))
+#print("contours", contours)
+
+
+maxArea = 0
+best = None
+
+
+ma_ar = []
+
+for i in range(len(contours)):
+    area = cv2.contourArea(contours[i])
+    (_, _), (MA, ma), _ = cv2.fitEllipse(contours[i])
+    ellipse = cv2.fitEllipse(contours[i])
+    ma_ar.append([MA, ma])
+
+    coef = min(ma_ar[len(ma_ar)-1])/max(ma_ar[len(ma_ar)-1])
+
+
+
+    print(coef)
+    # Using cv2.putText() method 
+    if (coef >= 0.95):
+        img_copy_3 = cv2.putText(img_copy_3, str(round(coef, 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,0,0), 1, cv2.LINE_AA) 
+    else:
+        img_copy_3 = cv2.putText(img_copy_3, str(round(coef, 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA)
+    cv2.fitEllipse(contours[i])
+    cv2.ellipse(img_copy_3, ellipse, (0,255,0),1)
+    #if area > maxArea :
+    #    maxArea = area
+    #    best = contour
+    #ellipse = cv2.fitEllipse(best)
+
+
+
+
+
+
+# 0.95
+
+
+
+
+
+#cv2.polylines(img_copy_3, [points], True, (0,0,0), thickness=1)
+
+
+
+
+
+'''
+pos = [35, 60]
+for j in range(len(r_array)): 
+    for i in range(len(r_array[j])):
+        img_copy_2 = cv2.ellipse(img_copy_2, (pos[0], pos[1]), (int(r_array[j][i]), int(r_array[j][i])), 360, 0, 360, (random.randrange(0, 255),random.randrange(0, 255),random.randrange(0, 255)), 1) 
+    pos[0] = pos[0]+70
+'''
+
+
+cv2.imshow("img_copy_2", img_copy_2)
+
+cv2.imshow("img_copy_3", img_copy_3)
+
 
 cv2.imshow("img_copy_1-2", img)
+
+
+
+
 
 
 
