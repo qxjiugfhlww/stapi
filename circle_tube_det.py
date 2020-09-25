@@ -6,7 +6,7 @@ import math
 
 
 
-img = 255 * np.ones(shape=[480, 640, 3], dtype=np.uint8)
+img = 255 * np.ones(shape=[700, 800, 3], dtype=np.uint8)
 
 img_copy_1 = img.copy()
 
@@ -282,7 +282,12 @@ k = 9
 
 
 N = 9
+
+
+
 r_arr = [[float(decimal.Decimal(random.randrange(2800, 3300))/100) for i in range(N)] for j in range(N) ]
+
+# find min of min and max of max
 
 min_r_arr = []
 max_r_arr = []
@@ -308,8 +313,30 @@ print("tmp_i", tmp_i)
 
 
 min_min = [(i,x) for i, x in enumerate(tmp_r) if x == min(tmp_r)]
+min_min = [i, min_min[0][0], min_min[0][1]]
 
-print("min:", min_min)
+print("min_min:", i, min_min)
+
+tmp_r = []
+tmp_i = []
+
+for i, x in enumerate(max_r_arr):
+    tmp_r.append(x[0][1])
+    tmp_i.append(x[0][0])
+
+    print("x", i, x[0][0], x[0][1])
+    for j, y in enumerate(x):
+        print(max(x))
+        print("y", j, y)
+
+
+print("tmp_r", tmp_r)
+print("tmp_i", tmp_i)
+
+
+max_max = [(i,x) for i, x in enumerate(tmp_r) if x == max(tmp_r)]
+max_max = [i, max_max[0][0], max_max[0][1]]
+print("max_max:", max_max)
 
 
 
@@ -320,8 +347,8 @@ print("min:", min_min)
 #r_arr = [31.65, 32.98, 31.96, 31.45, 30.34, 31.38, 28.16, 32.8, 28.71, 28.32]
 
 start_x = 35
+draw_center_xy = [[start_x,50] for i in range(N) ]
 center_xy = [[start_x+70*i,50] for i in range(10) ]
-
 
 #center_xy = [50,50]
 
@@ -330,9 +357,14 @@ print("center_xy", center_xy)
 
 # Step #6
 
+
+draw_points = []
 points = []
 
 points_all = []
+draw_points_all = []
+
+draw_x_offsets = [70*i for i in range(N) ]
 
 for j in range(N):
     cv2.circle(img_copy_2, (center_xy[j][0], center_xy[j][1]), 2, (255, 0, 0), -1)
@@ -341,18 +373,18 @@ for j in range(N):
         theta = i*(360/N)
         theta *= np.pi/180.0
         points.append([int(center_xy[j][0]+np.cos(theta)*r_arr[j][i]),int(center_xy[j][1]-np.sin(theta)*r_arr[j][i])])
-        cv2.line(img_copy_2, (center_xy[j][0], center_xy[j][1]),(points[len(points)-1][0], points[len(points)-1][1]), 255, 1)
+        draw_points.append([int(draw_center_xy[j][0]+np.cos(theta)*r_arr[j][i]),int(draw_center_xy[j][1]-np.sin(theta)*r_arr[j][i])])
+        cv2.line(img_copy_2, (draw_center_xy[j][0], draw_center_xy[j][1]),(draw_points[len(draw_points)-1][0], draw_points[len(points)-1][1]), 255, 1)
         #(row,col) = np.nonzero(np.logical_and(img_copy_2, ))
         #cv2.line(img_copy_2, (center_xy[j][0], center_xy[j][1]), (col[0],row[0]), 0, 1)
     points_all.append(points)
+    draw_points_all.append(draw_points)
     cv2.drawContours(img_copy_3, [np.array(points)], contourIdx=-1, color=(0,0,0),thickness=-1)
-    center_xy
 
 cv2.circle(img_copy_2, (50, 50), 2, (255, 0, 0), -1)
 
 
-
-points = np.array([points], np.int32)
+draw_points = np.array([draw_points], np.int32)
 
 #print("points", points)
 
@@ -376,28 +408,112 @@ best = None
 
 ma_ar = []
 
+xy_centers = []
+MA_arr = []
+ma_arr = []
+coef_arr = []
 for i in range(len(contours)):
     area = cv2.contourArea(contours[i])
-    (_, _), (MA, ma), _ = cv2.fitEllipse(contours[i])
+    (x, y), (MA, ma), angle = cv2.fitEllipse(contours[i])
+    cv2.ellipse(img_copy_3, ((300, 300), (MA, ma), angle), (0,255,0),1)
+    xy_centers.append([x,y])
+    MA_arr.append(MA)
+    ma_arr.append(ma)
+
     ellipse = cv2.fitEllipse(contours[i])
     ma_ar.append([MA, ma])
 
-    coef = min(ma_ar[len(ma_ar)-1])/max(ma_ar[len(ma_ar)-1])
+    coef_arr.append(min(ma_ar[len(ma_ar)-1])/max(ma_ar[len(ma_ar)-1]))
 
-
-
-    print(coef)
     # Using cv2.putText() method 
-    if (coef >= 0.95):
-        img_copy_3 = cv2.putText(img_copy_3, str(round(coef, 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,0,0), 1, cv2.LINE_AA) 
+    if (coef_arr[i] >= 0.95):
+        img_copy_3 = cv2.putText(img_copy_3, str(round(coef_arr[i], 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,0,0), 1, cv2.LINE_AA) 
     else:
-        img_copy_3 = cv2.putText(img_copy_3, str(round(coef, 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA)
+        img_copy_3 = cv2.putText(img_copy_3, str(round(coef_arr[i], 2)), (center_xy[i][0], center_xy[i][1] + 50), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA)
     cv2.fitEllipse(contours[i])
+
+    if (max_max[1] == i):
+        print("max")
+        img_copy_3 = cv2.putText(img_copy_3, "max r"+str(max_max[1])+": "+str(max_max[2]), (center_xy[i][0], center_xy[i][1] + 70), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+    if (min_min[1] == i):
+        print("min")
+        img_copy_3 = cv2.putText(img_copy_3, "min r"+str(min_min[1])+": "+str(min_min[2]), (center_xy[i][0], center_xy[i][1] + 70), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
     cv2.ellipse(img_copy_3, ellipse, (0,255,0),1)
     #if area > maxArea :
     #    maxArea = area
     #    best = contour
     #ellipse = cv2.fitEllipse(best)
+
+
+MA_max = [(i,x) for i, x in enumerate(MA_arr) if x == max(MA_arr)]
+ma_min = [(i,x) for i, x in enumerate(ma_arr) if x == min(ma_arr)]
+
+print("MA_max", MA_max)
+print("ma_min", ma_min)
+
+for i in range(len(contours)):
+    if (MA_max[0][0] == i):
+        print("max")
+        img_copy_3 = cv2.putText(img_copy_3, "max d"+str(MA_max[0][0])+": "+str(round(MA_max[0][1],2)), (center_xy[i][0], center_xy[i][1] + 80), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+    if (ma_min[0][0] == i):
+        print("min")
+        img_copy_3 = cv2.putText(img_copy_3, "min d"+str(ma_min[0][0])+": "+str(round(ma_min[0][1],2)), (center_xy[i][0], center_xy[i][1] + 80), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+
+
+
+img_copy_3 = cv2.putText(img_copy_3, "avg_coef_ellips: "+str(round(np.mean(coef_arr),2)), (center_xy[0][0], center_xy[0][1] + 90), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+
+img_copy_3 = cv2.putText(img_copy_3, "r_min/r_max: "+str(round(min_min[2]/max_max[2],2)), (center_xy[0][0], center_xy[0][1] + 100), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+
+
+img_copy_3 = cv2.putText(img_copy_3, "d_min/d_max: "+str(round(ma_min[0][1]/MA_max[0][1],2)), (center_xy[0][0], center_xy[0][1] + 110), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,255), 1, cv2.LINE_AA) 
+
+
+
+
+xy_centers = sorted(xy_centers, key=lambda x: x[0])
+
+xy_centers_tmp = [[xy_centers[i][0]-70*i,xy_centers[i][1]] for i in range(len(xy_centers))]
+
+print(xy_centers_tmp)
+
+xy_centers = [[int(xy_centers[i][0]-70*i), int(xy_centers[i][1])] for i in range(len(xy_centers))]
+
+
+
+for i in range(len(xy_centers)):
+    print(xy_centers[i])
+    cv2.circle(img_copy_3, (int(xy_centers[i][0])+10, int(xy_centers[i][1])+150), 1, (0,0,255), -1)
+
+
+all_dist = []
+max_dist = []
+
+for i in range(len(xy_centers)):
+    print(i)
+    all_dist.append([])
+    for j in range(len(xy_centers)):
+        all_dist[i].append(np.sqrt((xy_centers[i][0]-xy_centers[j][0])**2+(xy_centers[i][1]-xy_centers[j][1])**2))
+        print(" " + str(np.sqrt((xy_centers[i][0]-xy_centers[j][0])**2+(xy_centers[i][1]-xy_centers[j][1])**2)))
+    print(all_dist[i])
+    max_dist.append( [(k,x) for k, x in enumerate(all_dist[i]) if x == max(all_dist[i])] )
+
+print(all_dist)
+print(max_dist)
+
+
+
+
+
+dist_tmp_i =  0
+for i in range(len(max_dist)):
+    img_copy_3 = cv2.putText(img_copy_3, str(i), (80, 180+dist_tmp_i), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,0,0), 1, cv2.LINE_AA) 
+    for j in range(len(max_dist[i])):
+        img_copy_3 = cv2.putText(img_copy_3, str(max_dist[i][j][0]) +" "+str(round(max_dist[i][j][1], 2)), (90, 180+dist_tmp_i + 10*j), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255,0,0), 1, cv2.LINE_AA) 
+    dist_tmp_i += len(max_dist[i])*10
+
+
+
 
 
 

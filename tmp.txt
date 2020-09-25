@@ -1,0 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+
+namespace ConsoleApp1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            String input = File.ReadAllText(@"test.txt");
+
+            int i = 0, j = 0;
+            double[,] result = new double[10, 10];
+            foreach (var row in input.Split('\n'))
+            {
+                j = 0;
+                foreach (var col in row.Trim().Split('\t'))
+                {
+                    if (col.Contains('/')) 
+                    { 
+                        var index = 1;
+                        foreach (var item in col.Select((value, id) => new { id, value }))
+                        {
+                            if (item.value == '/') index = item.id;
+                        }
+                        result[i, j] = double.Parse(col.Substring(0, index)) / double.Parse(col.Substring(col.Length - index));
+                    }
+                    else
+                    {
+                        result[i, j] = double.Parse(col.Trim());
+                    }
+
+                    
+                    j++;
+                }
+                i++;
+            }
+            Console.WriteLine(result);
+            Console.ReadKey();
+        }
+    }
+}
