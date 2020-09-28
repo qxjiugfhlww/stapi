@@ -530,6 +530,94 @@ for i in range(len(max_dist)):
 
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
+
+rand_x_start = random.uniform(-0.1,0.05)
+
+print("rand_x_start:", rand_x_start)
+
+x = [i for i in np.arange(rand_x_start,0.15,(0.15-rand_x_start)/9)]
+
+rand_curve_range_1 = [np.cos(i) for i in x]
+
+print("x:", x)
+print("rand_curve_range_1:", rand_curve_range_1)
+
+
+
+
+rand_x_start_2 = random.uniform(-0.01,0.01)
+
+print("rand_x_start:", rand_x_start_2)
+
+x_2 = [i for i in np.arange(rand_x_start_2,0.15,(0.15-rand_x_start)/9)]
+
+
+
+rand_curve_range_2 = [np.sin(i+np.pi/2) for i in x_2]
+
+x_2 = [int(i*1000)+100 for i in x_2]
+
+
+print("x_2:", x_2)
+
+
+
+rand_curve_range_2 = [int(i*1000)-600 for i in rand_curve_range_2]
+print("rand_curve_range_2:", rand_curve_range_2)
+
+
+img_copy_3[rand_curve_range_2,x_2] = [0,0,0]
+
+# x = [int(i*1.2) for i in x]
+
+
+
+#img_copy_3[rand_curve_range_1,x] = [0,0,0]
+
+
+
+
+
+'''
+x = [i for i in range(300,400,1)]
+
+rand_curve_range_1 = [10*np.sin(i*np.pi*0.01) for i in x]
+
+
+rand_curve_range_1 = [int(i+400) for i in rand_curve_range_1]
+
+print(x)
+print(rand_curve_range_1)
+
+x = [int(i*1.2) for i in x]
+
+
+rand_curve_range_1 = [int(i*1.2) for i in rand_curve_range_1]
+
+print(x)
+print(rand_curve_range_1)
+
+img_copy_3[rand_curve_range_1,x] = [0,0,0]
+'''
+
+
+rand_curve_range_1 = [int(i*1000)-500 for i in rand_curve_range_1]
+
+x = [int(i*1000)+100 for i in x]
+
+print("x:", x)
+print("rand_curve_range_1:", rand_curve_range_1)
+
+img_copy_3[rand_curve_range_1,x] = [0,0,0]
+
+
+
+
 
 
 '''
